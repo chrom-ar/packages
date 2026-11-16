@@ -23,6 +23,10 @@ if [ $# -ge 1 ]; then
 else
 	"$root/scripts/download.sh" "$work/pkgs"
 fi
+if [ -z "$(ls -A "$work/pkgs")" ]; then
+	echo "nothing released yet: nothing to test"
+	exit 0
+fi
 
 docker network create "$net" >/dev/null
 url=http://$net-site:8000

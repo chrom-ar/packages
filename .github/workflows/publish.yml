@@ -3,13 +3,13 @@ name: publish
 # Rebuilds the apt and dnf repositories from the latest release of every
 # product in ./products and publishes them on GitHub Pages
 # (https://packages.chrom.ar). A product's release workflow starts it,
-# and so does a push to main; it can also be run by hand.
+# and so does a push to master; it can also be run by hand.
 
 on:
   repository_dispatch:
     types: [release]
   push: # a change here republishes too
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -36,18 +36,28 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -qq -y apt-utils createrepo-c rpm
       - name: Packages from the latest releases
+        id: download
         env:
           GH_TOKEN: ${{ github.token }}
-        run: scripts/download.sh "$RUNNER_TEMP/pkgs"
+        run: |
+          scripts/download.sh "$RUNNER_TEMP/pkgs"
+          if [ -n "$(ls -A "$RUNNER_TEMP/pkgs")" ]; then
+            echo "found=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "::notice::Nothing released yet: nothing to publish"
+          fi
       - name: Build
+        if: steps.download.outputs.found
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
           printf '%s\n' "$SIGNING_KEY" | gpg --batch --import
           KEY=$(gpg --list-secret-keys --with-colons | awk -F: '$1 == "fpr" { print $10; exit }')
           KEY=$KEY scripts/build.sh "$RUNNER_TEMP/pkgs" site https://packages.chrom.ar
-      - uses: actions/upload-pages-artifact@v5
+      - if: steps.download.outputs.found
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
       - id: deploy
+        if: steps.download.outputs.found
         uses: actions/deploy-pages@v5
