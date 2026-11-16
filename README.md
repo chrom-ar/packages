@@ -56,4 +56,4 @@ sudo zypper removerepo chroma
 ```
 
 Packages are signed with `Chroma <admin@chrom.ar>`, fingerprint
-`TO BE FILLED IN ONCE THE KEY EXISTS`.
+`FD24 0EB1 547C AD72 738C  591C 7580 7290 02DC 21A9`.
