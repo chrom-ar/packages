@@ -49,7 +49,7 @@ jobs:
       - name: Build
         if: steps.download.outputs.found
         env:
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_KEY: ${{ secrets.PACKAGES_SIGNING_KEY }}
         run: |
           printf '%s\n' "$SIGNING_KEY" | gpg --batch --import
           KEY=$(gpg --list-secret-keys --with-colons | awk -F: '$1 == "fpr" { print $10; exit }')
